@@ -6,12 +6,13 @@ import (
 	"os"
 )
 
-func openWriteFile(path string) (*os.File, error) {
-	return os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0777)
+func openFile(path string) (*os.File, error) {
+	return os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0777)
 }
 
 func NewLogger(name string) (*log.Logger, error) {
-	file, err := openWriteFile(fmt.Sprintf("log/%s.log", name))
+	path := fmt.Sprintf("log/%s.log", name)
+	file, err := openFile(path)
 
 	if err != nil {
 		return nil, err

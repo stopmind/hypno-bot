@@ -3,7 +3,8 @@ package core
 import "log"
 
 type Service interface {
-	Init(container *ServiceContainer)
+	Init(container *ServiceContainer) error
+	Stop()
 }
 
 type ServiceContainer struct {
@@ -13,4 +14,8 @@ type ServiceContainer struct {
 	Sessions *SessionsManager
 	Bot      *Bot
 	Name     string
+}
+
+func (c *ServiceContainer) Stop() {
+	c.Service.Stop()
 }

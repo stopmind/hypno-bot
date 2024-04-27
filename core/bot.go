@@ -12,7 +12,7 @@ type Bot struct {
 	services map[string]*ServiceContainer
 }
 
-func (b *Bot) Init() error {
+func (b *Bot) Start() error {
 	config, err := LoadConfig()
 	if err != nil {
 		return fmt.Errorf("bot: %s", err.Error())
@@ -23,24 +23,18 @@ func (b *Bot) Init() error {
 		return fmt.Errorf("bot: %s", err.Error())
 	}
 
-	return nil
-}
+	b.Identify.Intents = discordgo.IntentsGuilds |
+		discordgo.IntentsGuildMessages |
+		discordgo.IntentsGuildMembers |
+		discordgo.IntentGuildPresences
 
-func (b *Bot) Run() error {
-	defer b.Close()
-
-	err := b.Open()
+	err = b.Open()
 	if err != nil {
 		return fmt.Errorf("bot: %s", err.Error())
 	}
 
-	for {
-
-	}
-
 	return nil
 }
-
 func (b *Bot) AddService(name string, service Service) error {
 	_, ok := b.services[name]
 
@@ -62,7 +56,27 @@ func (b *Bot) AddService(name string, service Service) error {
 		return fmt.Errorf("bot: %s", err.Error())
 	}
 
-	service.Init(container)
+	if err = service.Init(container); err != nil {
+		container.Logger.Print(err)
+		return fmt.Errorf("bot: service init: %s", err.Error())
+	}
+
+	b.services[name] = container
 
 	return nil
+}
+
+func (b *Bot) Stop() {
+	for _, c := range b.services {
+		c.Stop()
+	}
+	_ = b.Close()
+}
+
+func NewBot() *Bot {
+	result := new(Bot)
+
+	result.services = make(map[string]*ServiceContainer)
+
+	return result
 }

@@ -2,7 +2,7 @@ package core
 
 import (
 	"fmt"
-	"github.com/BurntSushi/toml"
+	"github.com/pelletier/go-toml/v2"
 	"os"
 )
 
@@ -18,7 +18,7 @@ func LoadConfig() (Config, error) {
 		return Config{}, fmt.Errorf("config: %s", err.Error())
 	}
 
-	_, err = toml.Decode(string(source), &config)
+	err = toml.Unmarshal(source, &config)
 	if err != nil {
 		return Config{}, fmt.Errorf("config: %s", err.Error())
 	}

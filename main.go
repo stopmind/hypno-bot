@@ -3,6 +3,8 @@ package main
 import (
 	"hypno-bot/core"
 	"hypno-bot/services"
+	"os"
+	"os/signal"
 )
 
 func main() {
@@ -11,16 +13,16 @@ func main() {
 		panic(err)
 	}
 
-	bot := core.Bot{}
-	err = bot.Init()
+	bot := core.NewBot()
+	err = bot.Start()
 	if err != nil {
 		logger.Panic(err)
 	}
 
-	services.Init(&bot, logger)
+	services.Init(bot, logger)
 
-	err = bot.Run()
-	if err != nil {
-		logger.Panic(err)
-	}
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt)
+	<-c
+	bot.Stop()
 }

@@ -10,7 +10,11 @@ type Storage struct {
 }
 
 func (s *Storage) OpenFile(path string) (*os.File, error) {
-	return openWriteFile(filepath.Join(s.path, path))
+	return openFile(filepath.Join(s.path, path))
+}
+
+func (s *Storage) RemoveFile(path string) {
+	_ = os.Remove(filepath.Join(s.path, path))
 }
 
 func (s *Storage) ReadFile(path string) ([]byte, error) {
