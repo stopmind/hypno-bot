@@ -74,7 +74,7 @@ func (r *RankService) topSend(topType string, send *discordgo.MessageCreate) err
 		}
 
 		slices.SortFunc(users, func(a, b string) int {
-			return r.data.UsersStat[a] - r.data.UsersStat[b]
+			return r.data.UsersStat[b] - r.data.UsersStat[a]
 		})
 
 		for i, user := range users {
