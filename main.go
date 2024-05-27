@@ -5,6 +5,7 @@ import (
 	"hypno-bot/services"
 	"os"
 	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -22,7 +23,7 @@ func main() {
 	services.Init(bot, logger)
 
 	c := make(chan os.Signal)
-	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c
 	bot.Stop()
 }

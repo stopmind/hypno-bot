@@ -84,6 +84,7 @@ func (r *RankService) topSend(topType string, send *discordgo.MessageCreate) err
 			}
 
 			name := member.Nick
+
 			if name == "" {
 				name = member.User.GlobalName
 			}
