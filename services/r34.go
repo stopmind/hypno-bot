@@ -22,6 +22,7 @@ type R34Service struct {
 		TrollTarget string
 		TrollTags   []string
 		TrollCount  int
+		Channel     string
 	}
 }
 
@@ -87,6 +88,11 @@ func (r *R34Service) command(send *discordgo.MessageCreate) {
 		return
 	}
 
+	if send.ChannelID != r.config.Channel {
+		r.replyFile(send, "channelmessage.txt")
+		return
+	}
+
 	var tags []string
 	var err error
 	var count int
@@ -129,6 +135,20 @@ func (r *R34Service) command(send *discordgo.MessageCreate) {
 		if _, err = r.Bot.ChannelMessageSendReply(send.ChannelID, strings.Join(images[i*ipm:int(math.Min(float64(len(images)), float64(i+1)*ipm))], "\n"), send.Reference()); err != nil {
 			r.Logger.Print(err)
 		}
+	}
+}
+
+func (r *R34Service) replyFile(send *discordgo.MessageCreate, path string) {
+	content, err := r.Storage.ReadFile(path)
+
+	if err != nil {
+		r.Logger.Print(err)
+		return
+	}
+
+	err = r.Reply(send, string(content))
+	if err != nil {
+		r.Logger.Print(err)
 	}
 }
 
