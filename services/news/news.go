@@ -169,6 +169,7 @@ func (s *Service) publish(send *discordgo.MessageCreate) {
 	s.currentRelease.Tagline = strings.ReplaceAll(args.Get(1).(string), "_", " ")
 	s.currentRelease.Summary = args.Get(2).(string)
 	s.currentRelease.Date = time.Now().Format("02.01.2006")
+	s.currentRelease.Index = s.state.NextID
 
 	tmpl, err := s.Storage.GetTemplate("assets/begin.tmp")
 	if err == nil {
