@@ -118,6 +118,11 @@ func (r *R34Service) command(send *discordgo.MessageCreate) {
 		}
 	}
 
+	if count > 300 {
+		r.replyFile(send, "cowboy.txt")
+		return
+	}
+
 	images, err := getImages(count, tags)
 
 	if err != nil {
