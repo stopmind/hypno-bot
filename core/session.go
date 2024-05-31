@@ -77,6 +77,7 @@ func (s *SessionsManager) NewSession(userId string, data any) (*Session, error) 
 func newSessionsManager(container *ServiceContainer) *SessionsManager {
 	sessions := new(SessionsManager)
 	sessions.container = container
+	sessions.sessions = make(map[string]*Session)
 
 	return sessions
 }

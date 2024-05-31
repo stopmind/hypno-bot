@@ -2,6 +2,7 @@ package services
 
 import (
 	"hypno-bot/core"
+	"hypno-bot/services/news"
 	"log"
 )
 
@@ -17,6 +18,8 @@ func Init(bot *core.Bot, logger *log.Logger) {
 	addService(bot, logger, "stopmind.fun.games", new(GamesService))
 	//addService(bot, logger, "stopmind.fun.mine", new(MineService))
 	addService(bot, logger, "stopmind.serv.rank", new(RankService))
-	addService(bot, logger, "stopmind.serv.hello", new(HelloService))
+	//addService(bot, logger, "stopmind.serv.hello", new(HelloService))
 	//addService(bot, logger, "stopmind.serv.conpan", new(ConpanService))
+	addService(bot, logger, "stopmind.fun.r34", new(R34Service))
+	addService(bot, logger, "stopmind.fun.news", new(news.Service))
 }

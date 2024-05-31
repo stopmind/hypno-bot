@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"github.com/bwmarrin/discordgo"
 	"log"
 	"os"
 )
@@ -19,4 +20,10 @@ func NewLogger(name string) (*log.Logger, error) {
 	}
 
 	return log.New(file, "", 0), nil
+}
+
+func (c *ServiceContainer) Reply(send *discordgo.MessageCreate, content string) error {
+	_, err := c.Bot.ChannelMessageSendReply(send.ChannelID, content, send.Reference())
+
+	return err
 }
