@@ -2,76 +2,60 @@ package services
 
 import (
 	"github.com/bwmarrin/discordgo"
-	"github.com/pelletier/go-toml/v2"
 	"hypno-bot/core"
-	"strings"
+	"hypno-bot/services/builder"
 	"time"
 )
 
-type SpectacleService struct {
-	config struct {
+type Spectacle struct {
+	builder.WithContainer
+	builder.WithConfig[struct {
 		Default   string `toml:"default"`
 		End       string `toml:"end"`
 		Scenarios map[string][]struct {
 			Content string  `toml:"c"`
 			Time    float32 `toml:"t"`
 		} `toml:"scenarios"`
-	}
+	}]
 }
 
-func (s *SpectacleService) Stop() {
+func (s *Spectacle) command(send *discordgo.MessageCreate) {
+	scenario := s.Config.Scenarios[s.Config.Default]
 
-}
+	go func() {
+		first := scenario[0]
 
-func (y *SpectacleService) Init(container *core.ServiceContainer) error {
+		message, err := s.Bot.ChannelMessageSendReply(send.ChannelID, first.Content, send.Reference())
 
-	data, err := container.Storage.ReadFile("config.toml")
-	if err != nil {
-		return err
-	}
-
-	err = toml.Unmarshal(data, &y.config)
-	if err != nil {
-		return err
-	}
-
-	container.Bot.AddHandler(func(session *discordgo.Session, send *discordgo.MessageCreate) {
-		if !strings.HasPrefix(send.Content, "!spectacle") || send.Author.Bot {
+		if err != nil {
+			s.Logger.Print(err)
 			return
 		}
-		scenario := y.config.Scenarios[y.config.Default]
 
-		go func() {
-			first := scenario[0]
+		time.Sleep(time.Duration(first.Time * float32(time.Second)))
 
-			var message *discordgo.Message
-			message, err = session.ChannelMessageSendReply(send.ChannelID, first.Content, send.Reference())
-
+		for i := 1; i < len(scenario); i++ {
+			block := scenario[i]
+			_, err = s.Bot.ChannelMessageEdit(message.ChannelID, message.ID, block.Content)
 			if err != nil {
-				container.Logger.Print(err)
+				s.Logger.Print(err)
 				return
 			}
 
-			time.Sleep(time.Duration(first.Time * float32(time.Second)))
+			time.Sleep(time.Duration(block.Time * float32(time.Second)))
+		}
 
-			for i := 1; i < len(scenario); i++ {
-				block := scenario[i]
-				_, err = session.ChannelMessageEdit(message.ChannelID, message.ID, block.Content)
-				if err != nil {
-					container.Logger.Print(err)
-					return
-				}
+		_, err = s.Bot.ChannelMessageEdit(message.ChannelID, message.ID, s.Config.End)
+		if err != nil {
+			s.Logger.Print(err)
+			return
+		}
+	}()
+}
 
-				time.Sleep(time.Duration(block.Time * float32(time.Second)))
-			}
-
-			_, err = session.ChannelMessageEdit(message.ChannelID, message.ID, y.config.End)
-			if err != nil {
-				container.Logger.Print(err)
-				return
-			}
-		}()
-	})
-
-	return nil
+func BuildSpectacleService() core.Service {
+	content := new(Spectacle)
+	return builder.BuildService(content).
+		AddCommand("!spectacle", content.command).
+		Finish()
 }

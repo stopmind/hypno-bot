@@ -71,7 +71,7 @@ func getImages(count int, tags []string) ([]string, error) {
 func (r *R34Service) Init(container *core.ServiceContainer) error {
 	r.ServiceContainer = container
 
-	err := r.Storage.ReadTOML("config.toml", &r.config)
+	err := r.Storage.ReadTOML("WithConfig.toml", &r.config)
 	if err != nil {
 		return err
 	}

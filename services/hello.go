@@ -20,7 +20,7 @@ type HelloService struct {
 func (h *HelloService) Init(container *core.ServiceContainer) error {
 	h.ServiceContainer = container
 
-	data, err := h.Storage.ReadFile("config.toml")
+	data, err := h.Storage.ReadFile("WithConfig.toml")
 	if err != nil {
 		return err
 	}

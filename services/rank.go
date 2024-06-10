@@ -105,7 +105,7 @@ func (r *RankService) topSend(topType string, send *discordgo.MessageCreate) err
 func (r *RankService) Init(container *core.ServiceContainer) error {
 	r.ServiceContainer = container
 
-	data, err := r.Storage.ReadFile("config.toml")
+	data, err := r.Storage.ReadFile("WithConfig.toml")
 	if err != nil {
 		return err
 	}
