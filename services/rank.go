@@ -80,7 +80,8 @@ func (r *RankService) topSend(topType string, send *discordgo.MessageCreate) err
 		for i, user := range users {
 			member, err := r.Bot.GuildMember(send.GuildID, user)
 			if err != nil {
-				return err
+				i--
+				continue
 			}
 
 			name := member.Nick
