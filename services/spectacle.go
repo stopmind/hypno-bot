@@ -3,7 +3,7 @@ package services
 import (
 	"github.com/bwmarrin/discordgo"
 	"hypno-bot/core"
-	"hypno-bot/services/builder"
+	"hypno-bot/utils/builder"
 	"time"
 )
 

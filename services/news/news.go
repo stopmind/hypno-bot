@@ -67,15 +67,15 @@ func (s *Service) Init(container *core.ServiceContainer) error {
 			Parse(0, send.Content)
 
 		if err != nil {
-			s.replyIncorrectArgsError(send, err)
+			utils.ReplyIncorrectArgsError(send, err)
 			return
 		}
 
 		switch args.Get(0) {
 		case nil:
-			s.replyFile(send, "assets/index.txt")
+			utils.ReplyFile(send, "assets/index.txt")
 		case "справка":
-			s.replyFile(send, "assets/help.txt")
+			utils.ReplyFile(send, "assets/help.txt")
 		case "предложить":
 			s.propose(send)
 		case "опубликовать":
@@ -83,7 +83,7 @@ func (s *Service) Init(container *core.ServiceContainer) error {
 		case "одобрить":
 			s.accept(send)
 		default:
-			s.replyError(send, ":stop_sign: Некоректная команда", fmt.Sprintf("Неизвестная команда: `%v`\nПопробуйте `?газета справка`", args.Get(0)))
+			utils.ReplyError(send, ":stop_sign: Некоректная команда", fmt.Sprintf("Неизвестная команда: `%v`\nПопробуйте `?газета справка`", args.Get(0)))
 		}
 	})
 
@@ -104,7 +104,7 @@ func (s *Service) propose(send *discordgo.MessageCreate) {
 		Parse(3, send.Content)
 
 	if err != nil {
-		s.replyIncorrectArgsError(send, err)
+		utils.ReplyIncorrectArgsError(send, err)
 		return
 	}
 
@@ -113,7 +113,7 @@ func (s *Service) propose(send *discordgo.MessageCreate) {
 	if session == nil {
 		session, err = s.Sessions.NewSession(send.Author.ID, make([]*block, 0))
 		if err != nil {
-			s.replyUnexpectedError(send, err)
+			utils.ReplyUnexpectedError(send, err)
 			return
 		}
 	}
@@ -129,7 +129,7 @@ func (s *Service) propose(send *discordgo.MessageCreate) {
 
 	templ, err := s.Storage.GetTemplate("assets/notify.jet")
 	if err != nil {
-		s.replyUnexpectedError(send, err)
+		utils.ReplyUnexpectedError(send, err)
 		return
 	}
 
@@ -139,7 +139,7 @@ func (s *Service) propose(send *discordgo.MessageCreate) {
 		Service  string
 	}{newBlock, id, s.config.EditorsRole})
 	if err != nil {
-		s.replyUnexpectedError(send, err)
+		utils.ReplyUnexpectedError(send, err)
 		return
 	}
 
@@ -162,7 +162,7 @@ func (s *Service) publish(send *discordgo.MessageCreate) {
 		Parse(3, send.Content)
 
 	if err != nil {
-		s.replyIncorrectArgsError(send, err)
+		utils.ReplyIncorrectArgsError(send, err)
 		return
 	}
 
@@ -179,13 +179,13 @@ func (s *Service) publish(send *discordgo.MessageCreate) {
 		}
 	}
 	if err != nil {
-		s.replyUnexpectedError(send, err)
+		utils.ReplyUnexpectedError(send, err)
 		return
 	}
 
 	tmpl, err = s.Storage.GetTemplate("assets/block.tmp")
 	if err != nil {
-		s.replyUnexpectedError(send, err)
+		utils.ReplyUnexpectedError(send, err)
 		return
 	}
 	for _, block := range s.currentRelease.Blocks {
@@ -194,7 +194,7 @@ func (s *Service) publish(send *discordgo.MessageCreate) {
 			_, err = s.Bot.ChannelMessageSend(s.config.PublishChannel, text)
 		}
 		if err != nil {
-			s.replyUnexpectedError(send, err)
+			utils.ReplyUnexpectedError(send, err)
 			return
 		}
 	}
@@ -207,19 +207,19 @@ func (s *Service) publish(send *discordgo.MessageCreate) {
 		}
 	}
 	if err != nil {
-		s.replyUnexpectedError(send, err)
+		utils.ReplyUnexpectedError(send, err)
 		return
 	}
 
 	err = s.Storage.WriteJson(fmt.Sprintf("archive/%v.json", s.state.NextID), &s.currentRelease)
 	if err != nil {
-		s.replyUnexpectedError(send, err)
+		utils.ReplyUnexpectedError(send, err)
 	}
 
 	s.state.NextID += 1
 	err = s.Storage.WriteJson("state.json", &s.state)
 	if err != nil {
-		s.replyUnexpectedError(send, err)
+		utils.ReplyUnexpectedError(send, err)
 	}
 
 	s.currentRelease = release{
@@ -239,7 +239,7 @@ func (s *Service) accept(send *discordgo.MessageCreate) {
 		Parse(3, send.Content)
 
 	if err != nil {
-		s.replyIncorrectArgsError(send, err)
+		utils.ReplyIncorrectArgsError(send, err)
 		return
 	}
 
@@ -252,7 +252,7 @@ func (s *Service) accept(send *discordgo.MessageCreate) {
 		aBlock = session.Data.([]*block)[id]
 	}
 	if aBlock == nil {
-		s.replyError(send, ":bangbang: Не найдено", "Не удалось найти данное предложение")
+		utils.ReplyError(send, ":bangbang: Не найдено", "Не удалось найти данное предложение")
 		return
 	}
 
