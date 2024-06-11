@@ -3,6 +3,7 @@ package init
 import (
 	"hypno-bot/core"
 	"hypno-bot/services"
+	"hypno-bot/services/achievements"
 	"hypno-bot/services/news"
 	"hypno-bot/utils"
 	"log"
@@ -23,4 +24,5 @@ func Init(bot *core.Bot, logger *log.Logger) {
 	//addService(bot, logger, "serv.hello", new(HelloService))
 	addService(bot, logger, "fun.r34", new(services.R34Service))
 	addService(bot, logger, "fun.news", new(news.Service))
+	addService(bot, logger, "fun.achievements", achievements.BuildService())
 }

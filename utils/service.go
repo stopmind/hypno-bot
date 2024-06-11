@@ -11,11 +11,11 @@ type service struct {
 	builder.WithContainer
 }
 
-var instance service
+var instance *service
 
 func InitUtilsService() core.Service {
-	service := new(service)
-	return builder.BuildService(service).Finish()
+	instance = new(service)
+	return builder.BuildService(instance).Finish()
 }
 
 func ReplyError(send *discordgo.MessageCreate, title string, content string) {

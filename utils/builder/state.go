@@ -9,7 +9,13 @@ type WithState[TState any] struct {
 }
 
 func (c *WithState[TState]) initState(storage *core.Storage) error {
-	return storage.ReadJson("state.json", &c.State)
+	err := storage.ReadJson("state.json", &c.State)
+
+	if err != nil {
+		c.State = *new(TState)
+	}
+
+	return err
 }
 
 func (c *WithState[TState]) saveState(storage *core.Storage) error {

@@ -12,11 +12,11 @@ type builtService struct {
 	handlers  []any
 }
 
-func (b builtService) Init(container *core.ServiceContainer) error {
+func (b *builtService) Init(container *core.ServiceContainer) error {
 	b.container = container
 
 	if contain, ok := b.content.(containerInit); ok {
-		contain.initContainer(b.container)
+		contain.initContainer(container)
 	}
 
 	if config, ok := b.content.(configInit); ok {
@@ -26,7 +26,7 @@ func (b builtService) Init(container *core.ServiceContainer) error {
 	}
 	if state, ok := b.content.(stateInit); ok {
 		if err := state.initState(container.Storage); err != nil {
-			return err
+			container.Logger.Print(err)
 		}
 	}
 
@@ -37,7 +37,7 @@ func (b builtService) Init(container *core.ServiceContainer) error {
 	return nil
 }
 
-func (b builtService) Stop() {
+func (b *builtService) Stop() {
 	if state, ok := b.content.(stateInit); ok {
 		if err := state.saveState(b.container.Storage); err != nil {
 			b.container.Logger.Print(err)
