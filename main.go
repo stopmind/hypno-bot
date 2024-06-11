@@ -2,7 +2,7 @@ package main
 
 import (
 	"hypno-bot/core"
-	"hypno-bot/init"
+	i "hypno-bot/init"
 	"os"
 	"os/signal"
 	"syscall"
@@ -20,7 +20,7 @@ func main() {
 		logger.Panic(err)
 	}
 
-	init.Init(bot, logger)
+	i.Init(bot, logger)
 
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)

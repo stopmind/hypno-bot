@@ -6,5 +6,7 @@ import (
 )
 
 var templateFuncs = template.FuncMap{
-	"replace": strings.Replace,
+	"replace":    strings.Replace,
+	"memberName": MemberName,
+	"sum":        func(a int, b int) int { return a + b },
 }

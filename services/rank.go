@@ -2,10 +2,10 @@ package services
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/pelletier/go-toml/v2"
 	"hypno-bot/core"
+	"hypno-bot/utils"
 	"slices"
 	"strings"
 	"time"
@@ -19,6 +19,7 @@ type RankService struct {
 	}
 	data struct {
 		UsersStat    map[string]int
+		UsersCookies map[string]int
 		ChannelsStat map[string]int
 	}
 }
@@ -51,50 +52,103 @@ func (r *RankService) loadData() error {
 		r.Logger.Print(err)
 	}
 
-	if err == nil {
-		return nil
+	if r.data.UsersStat == nil {
+		r.data.UsersStat = make(map[string]int)
 	}
-
-	r.data.UsersStat = make(map[string]int)
-	r.data.ChannelsStat = make(map[string]int)
+	if r.data.ChannelsStat == nil {
+		r.data.ChannelsStat = make(map[string]int)
+	}
+	if r.data.UsersCookies == nil {
+		r.data.UsersCookies = make(map[string]int)
+	}
 
 	return nil
 }
 
 func (r *RankService) topSend(topType string, send *discordgo.MessageCreate) error {
-	message := ""
+	message := "Че ты от меня хочешь?"
 	switch topType {
 	case "users":
-		message += "Ах, как я люблю задротов этого сервера, вот они, слево направо:\n\n"
-
-		users := make([]string, 0, len(r.data.UsersStat))
+		members := make([]*discordgo.Member, 0, len(r.data.UsersStat))
 
 		for k := range r.data.UsersStat {
-			users = append(users, k)
-		}
-
-		slices.SortFunc(users, func(a, b string) int {
-			return r.data.UsersStat[b] - r.data.UsersStat[a]
-		})
-
-		for i, user := range users {
-			member, err := r.Bot.GuildMember(send.GuildID, user)
+			member, err := r.Bot.GuildMember(send.GuildID, k)
 			if err != nil {
-				i--
 				continue
 			}
-
-			name := member.Nick
-
-			if name == "" {
-				name = member.User.GlobalName
-			}
-			if name == "" {
-				name = member.User.Username
-			}
-
-			message += fmt.Sprintf("**%v. %s** *(%v сообщений)*\n", i+1, name, r.data.UsersStat[user])
+			members = append(members, member)
 		}
+
+		slices.SortFunc(members, func(a, b *discordgo.Member) int {
+			return r.data.UsersStat[b.User.ID] - r.data.UsersStat[a.User.ID]
+		})
+
+		template, err := r.Storage.GetTemplate("assets/users.tmp")
+		if err == nil {
+			message, err = utils.ExecuteTemplate(template, map[string]any{
+				"users": members,
+				"stat":  r.data.UsersStat,
+			})
+		}
+
+		if err != nil {
+			return err
+		}
+	case "channels":
+		channels := make([]*discordgo.Channel, 0, len(r.data.ChannelsStat))
+
+		for k := range r.data.ChannelsStat {
+			channel, err := r.Bot.Channel(k)
+			if err != nil {
+				continue
+			}
+			channels = append(channels, channel)
+		}
+		slices.SortFunc(channels, func(a, b *discordgo.Channel) int {
+			return r.data.ChannelsStat[b.ID] - r.data.ChannelsStat[a.ID]
+		})
+
+		template, err := r.Storage.GetTemplate("assets/channels.tmp")
+		if err == nil {
+			message, err = utils.ExecuteTemplate(template, map[string]any{
+				"channels": channels,
+				"stat":     r.data.ChannelsStat,
+			})
+		}
+
+		if err != nil {
+			return err
+		}
+
+		break
+	case "cookies":
+		users := make([]*discordgo.Member, 0, len(r.data.UsersStat))
+
+		for k := range r.data.UsersCookies {
+			member, err := r.Bot.GuildMember(send.GuildID, k)
+			if err != nil {
+				continue
+			}
+			users = append(users, member)
+		}
+
+		slices.SortFunc(users, func(a, b *discordgo.Member) int {
+			return r.data.UsersCookies[b.User.ID] - r.data.UsersCookies[a.User.ID]
+		})
+
+		template, err := r.Storage.GetTemplate("assets/cookies.tmp")
+		if err == nil {
+			message, err = utils.ExecuteTemplate(template, map[string]any{
+				"users": users,
+				"stat":  r.data.UsersCookies,
+			})
+		}
+
+		if err != nil {
+			return err
+		}
+
+		break
 	}
 
 	_, err := r.Bot.ChannelMessageSendReply(send.ChannelID, message, send.Reference())
@@ -105,7 +159,7 @@ func (r *RankService) topSend(topType string, send *discordgo.MessageCreate) err
 func (r *RankService) Init(container *core.ServiceContainer) error {
 	r.ServiceContainer = container
 
-	data, err := r.Storage.ReadFile("WithConfig.toml")
+	data, err := r.Storage.ReadFile("config.toml")
 	if err != nil {
 		return err
 	}
@@ -130,6 +184,8 @@ func (r *RankService) Init(container *core.ServiceContainer) error {
 		}
 	}()
 
+	const cookieEmoji = "🍪"
+
 	r.Bot.AddHandler(func(session *discordgo.Session, send *discordgo.MessageCreate) {
 		if send.Author.Bot {
 			return
@@ -146,9 +202,59 @@ func (r *RankService) Init(container *core.ServiceContainer) error {
 
 		topType := "users"
 
+		parts := strings.SplitN(send.Content, " ", 2)
+		if len(parts) == 2 {
+			topType = parts[1]
+		}
+
 		if err = r.topSend(topType, send); err != nil {
 			r.Logger.Print(err)
 		}
+	})
+
+	r.Bot.AddHandler(func(session *discordgo.Session, event *discordgo.MessageReactionAdd) {
+		if event.Member.User.Bot || event.Emoji.Name != cookieEmoji {
+			return
+		}
+
+		message, err := r.Bot.ChannelMessage(event.ChannelID, event.MessageID)
+		if err != nil {
+			return
+		}
+
+		if message.Author.ID == event.UserID {
+			return
+		}
+
+		if _, ok := r.data.UsersCookies[event.UserID]; !ok {
+			r.data.UsersCookies[message.Author.ID] = 0
+		}
+		r.data.UsersCookies[message.Author.ID] += 1
+	})
+
+	r.Bot.AddHandler(func(session *discordgo.Session, event *discordgo.MessageReactionRemove) {
+		if event.Emoji.Name != cookieEmoji {
+			return
+		}
+
+		user, err := r.Bot.User(event.UserID)
+		if user.Bot || err != nil {
+			return
+		}
+
+		message, err := r.Bot.ChannelMessage(event.ChannelID, event.MessageID)
+		if err != nil {
+			return
+		}
+
+		if message.Author.ID == event.UserID {
+			return
+		}
+
+		if _, ok := r.data.UsersCookies[event.UserID]; !ok {
+			r.data.UsersCookies[message.Author.ID] = 0
+		}
+		r.data.UsersCookies[message.Author.ID] -= 1
 	})
 
 	return nil

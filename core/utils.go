@@ -27,3 +27,16 @@ func (c *ServiceContainer) Reply(send *discordgo.MessageCreate, content string) 
 
 	return err
 }
+
+func MemberName(member *discordgo.Member) string {
+	name := member.Nick
+
+	if name == "" {
+		name = member.User.GlobalName
+	}
+	if name == "" {
+		name = member.User.Username
+	}
+
+	return name
+}

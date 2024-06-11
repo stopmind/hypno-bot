@@ -26,6 +26,8 @@ func (b *Bot) Start() error {
 	b.Identify.Intents = discordgo.IntentsGuilds |
 		discordgo.IntentsGuildMessages |
 		discordgo.IntentsGuildMembers |
+		discordgo.IntentsGuildMessageReactions |
+		discordgo.IntentGuildMessageReactions |
 		discordgo.IntentGuildPresences
 
 	err = b.Open()
