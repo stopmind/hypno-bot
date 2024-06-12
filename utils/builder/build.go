@@ -66,7 +66,8 @@ type CommandAction func(send *discordgo.MessageCreate)
 
 func (b *ServiceBuilder) AddCommand(name string, action CommandAction) *ServiceBuilder {
 	return b.AddHandler(func(session *discordgo.Session, send *discordgo.MessageCreate) {
-		if !send.Author.Bot && strings.HasPrefix(send.Content, name) {
+		parts := strings.SplitN(send.Content, " ", 2)
+		if !send.Author.Bot && parts[0] == name {
 			action(send)
 		}
 	})

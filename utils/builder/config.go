@@ -8,7 +8,6 @@ type WithConfig[TConfig any] struct {
 
 func (c *WithConfig[TConfig]) initConfig(storage *core.Storage) error {
 	return storage.ReadTOML("config.toml", &c.Config)
-
 }
 
 type configInit interface {

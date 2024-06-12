@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"hypno-bot/core"
+	"hypno-bot/utils/builder"
 	"io"
 	"math"
 	"math/rand/v2"
@@ -12,18 +13,14 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type R34Service struct {
-	*core.ServiceContainer
-
-	config struct {
-		TrollMod    bool
-		TrollTarget string
-		TrollTags   []string
-		TrollCount  int
-		Channel     string
-	}
+	builder.WithContainer
+	builder.WithConfig[struct {
+		Channel string
+	}]
 }
 
 func getImages(count int, tags []string) ([]string, error) {
@@ -49,8 +46,16 @@ func getImages(count int, tags []string) ([]string, error) {
 		return nil, err
 	}
 
-	images := make([]string, count)
+	if len(posts) < count {
+		images := make([]string, len(posts))
+		for i, post := range posts {
+			images[i] = post.FileUrl
+		}
 
+		return images, nil
+	}
+
+	images := make([]string, count)
 	usedPosts := make([]int, 0)
 	for i := 0; i < count; i++ {
 		var id int
@@ -68,28 +73,30 @@ func getImages(count int, tags []string) ([]string, error) {
 	return images, nil
 }
 
-func (r *R34Service) Init(container *core.ServiceContainer) error {
-	r.ServiceContainer = container
-
-	err := r.Storage.ReadTOML("WithConfig.toml", &r.config)
-	if err != nil {
-		return err
+func (r *R34Service) checkTimer(send *discordgo.MessageCreate) bool {
+	session, _ := r.Sessions.GetSession(send.Author.ID)
+	if session != nil && time.Now().Sub(session.Data.(time.Time)) < time.Second*10 {
+		r.replyFile(send, "assets/toofast.txt")
+		return true
 	}
 
-	r.Bot.AddHandler(func(session *discordgo.Session, send *discordgo.MessageCreate) {
-		r.command(send)
-	})
+	if session == nil {
+		session, _ = r.Sessions.NewSession(send.Author.ID, time.Now())
+	} else {
+		session.Data = time.Now()
+		session.Extend()
+	}
 
-	return nil
+	return false
 }
 
 func (r *R34Service) command(send *discordgo.MessageCreate) {
-	if !strings.HasPrefix(send.Content, "!r34") || send.Author.Bot {
+	if send.ChannelID != r.Config.Channel {
+		r.replyFile(send, "assets/channelmessage.txt")
 		return
 	}
 
-	if send.ChannelID != r.config.Channel {
-		r.replyFile(send, "channelmessage.txt")
+	if r.checkTimer(send) {
 		return
 	}
 
@@ -97,40 +104,35 @@ func (r *R34Service) command(send *discordgo.MessageCreate) {
 	var err error
 	var count int
 
-	if r.config.TrollMod && send.Author.ID == r.config.TrollTarget {
-		count = r.config.TrollCount
-		tags = r.config.TrollTags
-	} else {
-		parts := strings.Split(send.Content, " ")
+	parts := strings.Split(send.Content, " ")
+	count = 5
 
-		count = 5
-
-		if len(parts) >= 2 {
-			count, err = strconv.Atoi(parts[1])
-			if err != nil {
-				count = 5
-			}
-		}
-
-		tags = make([]string, 0)
-		if len(parts) >= 3 {
-			tags = parts[2:]
+	if len(parts) >= 2 {
+		count, err = strconv.Atoi(parts[1])
+		if err != nil {
+			count = 5
 		}
 	}
 
-	if count > 300 {
-		r.replyFile(send, "cowboy.txt")
+	tags = make([]string, 0)
+	if len(parts) >= 3 {
+		tags = parts[2:]
+	}
+
+	if count > 15 {
+		r.replyFile(send, "assets/cowboy.txt")
 		return
 	}
 
 	images, err := getImages(count, tags)
 
-	if err != nil {
-		if _, err = r.Bot.ChannelMessageSendReply(send.ChannelID, err.Error(), send.Reference()); err != nil {
-			r.Logger.Print(err)
-		}
-
+	if len(images) == 0 || err != nil {
+		r.replyFile(send, "assets/cantfind.txt")
 		return
+	}
+
+	if len(images) < count {
+		r.replyFile(send, "assets/toofew.txt")
 	}
 
 	const ipm = 5
@@ -141,6 +143,73 @@ func (r *R34Service) command(send *discordgo.MessageCreate) {
 			r.Logger.Print(err)
 		}
 	}
+}
+
+func (r *R34Service) commandTo(send *discordgo.MessageCreate) {
+	if send.ChannelID != r.Config.Channel {
+		r.replyFile(send, "assets/channelmessage.txt")
+		return
+	}
+
+	var tags []string
+	var err error
+	var count int
+	target := ""
+
+	parts := strings.Split(send.Content, " ")
+	count = 5
+
+	if len(parts) >= 2 {
+		targetRaw := parts[1]
+		if strings.HasPrefix(targetRaw, "<@") && strings.HasSuffix(targetRaw, ">") {
+			target = strings.TrimSuffix(strings.TrimPrefix(targetRaw, "<@"), ">")
+		}
+	}
+
+	if target == "" {
+		r.replyFile(send, "assets/comu.txt")
+		return
+	}
+
+	if len(parts) >= 3 {
+		count, err = strconv.Atoi(parts[2])
+		if err != nil {
+			count = 5
+		}
+	}
+
+	if r.checkTimer(send) {
+		return
+	}
+
+	tags = make([]string, 0)
+	if len(parts) >= 4 {
+		tags = parts[3:]
+	}
+
+	if count > 15 {
+		r.replyFile(send, "assets/cowboy.txt")
+		return
+	}
+
+	images, err := getImages(count, tags)
+
+	if len(images) == 0 || err != nil {
+		r.replyFile(send, "assets/cantfind.txt")
+		return
+	}
+
+	if len(images) < count {
+		r.replyFile(send, "assets/toofew.txt")
+	}
+
+	for _, image := range images {
+		_, err = r.Bot.ChannelMessageSend(send.ChannelID, fmt.Sprintf("<@%v> %v", target, image))
+		if err != nil {
+			r.Logger.Print(err)
+		}
+	}
+
 }
 
 func (r *R34Service) replyFile(send *discordgo.MessageCreate, path string) {
@@ -157,6 +226,10 @@ func (r *R34Service) replyFile(send *discordgo.MessageCreate, path string) {
 	}
 }
 
-func (r *R34Service) Stop() {
-
+func BuildR34Service() core.Service {
+	c := new(R34Service)
+	return builder.BuildService(c).
+		AddCommand("!r34", c.command).
+		AddCommand("!r34to", c.commandTo).
+		Finish()
 }
