@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"maps"
 	"time"
 )
 
@@ -72,6 +73,12 @@ func (s *SessionsManager) NewSession(userId string, data any) (*Session, error) 
 	session.startAwake()
 	s.sessions[userId] = session
 	return session, nil
+}
+
+func (s *SessionsManager) Update() {
+	maps.DeleteFunc(s.sessions, func(s string, session *Session) bool {
+		return session.Check()
+	})
 }
 
 func newSessionsManager(container *ServiceContainer) *SessionsManager {

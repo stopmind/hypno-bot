@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 func main() {
@@ -24,6 +25,18 @@ func main() {
 
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	<-c
+
+L:
+	for {
+		select {
+		case <-c:
+			break L
+		default:
+			time.Sleep(1 * time.Second)
+			bot.Update()
+			break
+		}
+	}
+
 	bot.Stop()
 }

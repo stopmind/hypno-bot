@@ -68,6 +68,12 @@ func (b *Bot) AddService(name string, service Service) error {
 	return nil
 }
 
+func (b *Bot) Update() {
+	for _, service := range b.services {
+		service.Sessions.Update()
+	}
+}
+
 func (b *Bot) Stop() {
 	for _, c := range b.services {
 		c.Stop()

@@ -2,19 +2,26 @@ package utils
 
 import (
 	"errors"
-	"reflect"
 	"strconv"
 	"strings"
 )
 
+type kind int
+
+const (
+	stringKind kind = iota
+	intKind
+	userKind
+)
+
 type argData struct {
-	kind  reflect.Kind
+	kind  kind
 	value any
 }
 
 func (a *argData) parse(order []*argData, data string) error {
 	switch a.kind {
-	case reflect.String:
+	case stringKind:
 		if len(order) == 0 {
 			a.value = data
 			return nil
@@ -28,7 +35,7 @@ func (a *argData) parse(order []*argData, data string) error {
 
 		a.value = data[:end]
 		return order[0].parse(order[1:], data[end+1:])
-	case reflect.Int:
+	case intKind:
 		end := strings.Index(data, " ")
 		if end == -1 {
 			end = len(data)
@@ -39,6 +46,24 @@ func (a *argData) parse(order []*argData, data string) error {
 		if err != nil {
 			return err
 		}
+
+		if len(order) != 0 {
+			return order[0].parse(order[1:], data[end+1:])
+		}
+
+		return nil
+	case userKind:
+		end := strings.Index(data, " ")
+		if end == -1 {
+			end = len(data)
+		}
+
+		raw := data[:end]
+		if !strings.HasPrefix(raw, "<@") || !strings.HasSuffix(raw, ">") {
+			return errors.New("invalid user")
+		}
+
+		a.value = strings.TrimSuffix(strings.TrimPrefix(raw, "<@"), ">")
 
 		if len(order) != 0 {
 			return order[0].parse(order[1:], data[end+1:])
@@ -84,7 +109,7 @@ func (a *ArgsParser) Parse(minCount int, message string) (*ArgsParser, error) {
 
 func (a *ArgsParser) AddInt() *ArgsParser {
 	a.args = append(a.args, &argData{
-		kind: reflect.Int,
+		kind: intKind,
 	})
 
 	return a
@@ -92,7 +117,15 @@ func (a *ArgsParser) AddInt() *ArgsParser {
 
 func (a *ArgsParser) AddString() *ArgsParser {
 	a.args = append(a.args, &argData{
-		kind: reflect.String,
+		kind: stringKind,
+	})
+
+	return a
+}
+
+func (a *ArgsParser) AddUser() *ArgsParser {
+	a.args = append(a.args, &argData{
+		kind: userKind,
 	})
 
 	return a
