@@ -159,7 +159,7 @@ func (c *content) point(send *discordgo.MessageCreate) {
 	end := false
 
 	if proc.Side1.Points == 3 {
-		err = c.Reply(send, fmt.Sprintf("**%v** проиграл суд.", proc.Side1.Name))
+		err = c.Reply(send, fmt.Sprintf("**%v** выиграл суд.", proc.Side1.Name))
 		if err != nil {
 			utils.ReplyUnexpectedError(send, err)
 		}
@@ -167,7 +167,7 @@ func (c *content) point(send *discordgo.MessageCreate) {
 	}
 
 	if proc.Side2.Points == 3 {
-		err = c.Reply(send, fmt.Sprintf("**%v** проиграл суд.", proc.Side2.Name))
+		err = c.Reply(send, fmt.Sprintf("**%v** выиграл суд.", proc.Side2.Name))
 		if err != nil {
 			utils.ReplyUnexpectedError(send, err)
 		}
