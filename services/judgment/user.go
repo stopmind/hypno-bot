@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"hypno-bot/core"
+	"hypno-bot/services/achievements"
 	"hypno-bot/utils"
 	"math"
 	"strconv"
@@ -144,4 +145,6 @@ func (c *content) review(send *discordgo.MessageCreate) {
 	if err != nil {
 		utils.ReplyUnexpectedError(send, err)
 	}
+
+	achievements.OnReview(send.Author.ID)
 }

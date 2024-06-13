@@ -11,7 +11,8 @@ import (
 )
 
 type userInfo struct {
-	Achievements []string `toml:"achievements"`
+	Achievements []string `json:"achievements"`
+	Progress     progress `json:"progress"`
 }
 
 type content struct {
@@ -25,6 +26,8 @@ type content struct {
 	}]
 }
 
+var c *content
+
 func (c *content) getUserInfo(id string) *userInfo {
 	user, ok := c.State.Users[id]
 	if ok {
@@ -35,7 +38,13 @@ func (c *content) getUserInfo(id string) *userInfo {
 		c.State.Users = make(map[string]*userInfo)
 	}
 
-	user = &userInfo{Achievements: make([]string, 0)}
+	user = &userInfo{
+		Achievements: make([]string, 0),
+		Progress: progress{
+			AristocratCount: 0,
+			Counters:        make(map[string]int),
+		},
+	}
 	c.State.Users[id] = user
 	return user
 }
@@ -96,11 +105,12 @@ func (c *content) profile(send *discordgo.MessageCreate) {
 }
 
 func BuildService() core.Service {
-	c := new(content)
+	c = new(content)
 	return builder.BuildService(c).
 		AddCommand("?ачивки", c.profile).
 		AddCommand("test", func(send *discordgo.MessageCreate) {
 			c.giveAchievement(send.Author.ID, "test")
 		}).
+		AddHandler(c.aristocratCheck).
 		Finish()
 }

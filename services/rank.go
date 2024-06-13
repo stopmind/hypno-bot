@@ -5,6 +5,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/pelletier/go-toml/v2"
 	"hypno-bot/core"
+	"hypno-bot/services/achievements"
 	"hypno-bot/utils"
 	"slices"
 	"strings"
@@ -230,6 +231,9 @@ func (r *RankService) Init(container *core.ServiceContainer) error {
 			r.data.UsersCookies[message.Author.ID] = 0
 		}
 		r.data.UsersCookies[message.Author.ID] += 1
+		if r.data.UsersCookies[message.Author.ID] > 100 {
+			achievements.CheckCookies(message.Author.ID)
+		}
 	})
 
 	r.Bot.AddHandler(func(session *discordgo.Session, event *discordgo.MessageReactionRemove) {

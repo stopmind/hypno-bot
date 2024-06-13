@@ -45,11 +45,30 @@ func (c *content) command(send *discordgo.MessageCreate) {
 	case "отзыв":
 		c.review(send)
 		break
+	case "справка":
+		c.help(send)
+		break
 	default:
 		utils.ReplyError(send, "Я чет не понял", fmt.Sprintf("Не получилось найти колманду `%s`.", args.Get(0)))
 		break
 	}
 
+}
+
+const helpMessage = "# Справка\n\n" +
+	"## Суд\n" +
+	"`?суд начать <сторона1> <сторона2>` - начать суд\n" +
+	"`?суд стоп` - закончить суд досрочно\n" +
+	"`?суд поинт <сторона>` - добавить очко на одну из сторон, если сторона получит 3 очка, она проиграет\n" +
+	"## Отзывы\n" +
+	"`?суд отзыв <пользователь> <очки> <комментарий>` - оставить отзыв на человека\n" +
+	"`?суд карма <пользователь>` - посмотреть карму пользователя\n"
+
+func (c *content) help(send *discordgo.MessageCreate) {
+	err := c.Reply(send, helpMessage)
+	if err != nil {
+		utils.ReplyUnexpectedError(send, err)
+	}
 }
 
 func BuildService() core.Service {

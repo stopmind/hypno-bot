@@ -32,7 +32,7 @@ L:
 		case <-c:
 			break L
 		default:
-			time.Sleep(1 * time.Second)
+			time.Sleep(time.Millisecond * 200)
 			bot.Update()
 			break
 		}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"hypno-bot/core"
+	"hypno-bot/services/achievements"
 	"hypno-bot/utils/builder"
 	"io"
 	"math"
@@ -143,6 +144,8 @@ func (r *R34Service) command(send *discordgo.MessageCreate) {
 			r.Logger.Print(err)
 		}
 	}
+
+	achievements.OnR34(send.Author.ID)
 }
 
 func (r *R34Service) commandTo(send *discordgo.MessageCreate) {
@@ -210,6 +213,7 @@ func (r *R34Service) commandTo(send *discordgo.MessageCreate) {
 		}
 	}
 
+	achievements.OnR34To(send.Author.ID)
 }
 
 func (r *R34Service) replyFile(send *discordgo.MessageCreate, path string) {

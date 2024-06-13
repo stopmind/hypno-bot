@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"hypno-bot/core"
+	"hypno-bot/services/achievements"
 	"hypno-bot/utils"
 	"strings"
 	"time"
@@ -148,6 +149,8 @@ func (s *Service) propose(send *discordgo.MessageCreate) {
 		s.Logger.Print(err)
 		return
 	}
+
+	achievements.OnBlock(send.Author.ID)
 }
 
 func (s *Service) publish(send *discordgo.MessageCreate) {
