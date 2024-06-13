@@ -23,20 +23,17 @@ func main() {
 
 	i.Init(bot, logger)
 
-	c := make(chan os.Signal)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-
-L:
-	for {
-		select {
-		case <-c:
-			break L
-		default:
+	go func() {
+		for {
 			time.Sleep(time.Millisecond * 200)
 			bot.Update()
-			break
 		}
-	}
+	}()
+
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	<-c
 
 	bot.Stop()
+	os.Exit(0)
 }
