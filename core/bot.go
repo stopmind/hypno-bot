@@ -51,10 +51,11 @@ func (b *Bot) AddService(name string, service Service) error {
 	container.Bot = b
 	container.Sessions = newSessionsManager(container)
 	container.Storage = newStorage(filepath.Join("storage", name))
-	container.Handlers = newHandlersManager(container.Logger, b)
 
 	var err error
 	container.Logger, err = NewLogger(name)
+
+	container.Handlers = newHandlersManager(container.Logger, b)
 
 	if err != nil {
 		return fmt.Errorf("bot: %s", err.Error())

@@ -93,6 +93,9 @@ func (c *content) profile(send *discordgo.MessageCreate) {
 		"User":         c.getUserInfo(send.Author.ID),
 		"Achievements": c.Config.Achievements,
 	})
+
+	print(result[99999])
+
 	if err != nil {
 		utils.ReplyUnexpectedError(send, err)
 		return

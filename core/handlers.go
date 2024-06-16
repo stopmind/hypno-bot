@@ -4,12 +4,14 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"log"
 	"reflect"
+	"runtime/debug"
+	"strings"
 )
 
 type HandlersManager struct {
 	logger      *log.Logger
 	bot         *Bot
-	handlers    map[reflect.Type][]func(any)
+	handlers    map[reflect.Type][]reflect.Value
 	initialized bool
 }
 
@@ -22,10 +24,10 @@ func (h *HandlersManager) AddHandler(handler any) {
 
 	slice, ok := h.handlers[t]
 	if !ok {
-		slice = make([]func(any), 0, 1)
+		slice = make([]reflect.Value, 0, 1)
 	}
 
-	h.handlers[t] = append(slice, handler.(func(any)))
+	h.handlers[t] = append(slice, reflect.ValueOf(handler))
 }
 
 func (h *HandlersManager) init() {
@@ -42,12 +44,13 @@ func (h *HandlersManager) handle(_ *discordgo.Session, event any) {
 
 	defer func() {
 		if err := recover(); err != nil {
-			h.logger.Println(err)
+			h.logger.Printf("%v\n  %v\n", err, strings.ReplaceAll(string(debug.Stack()), "\n", "\n  "))
 		}
 	}()
 
+	args := []reflect.Value{reflect.ValueOf(event)}
 	for _, handler := range handlers {
-		handler(event)
+		handler.Call(args)
 	}
 }
 
@@ -56,6 +59,6 @@ func newHandlersManager(logger *log.Logger, bot *Bot) *HandlersManager {
 		logger:      logger,
 		bot:         bot,
 		initialized: false,
-		handlers:    make(map[reflect.Type][]func(any)),
+		handlers:    make(map[reflect.Type][]reflect.Value),
 	}
 }
