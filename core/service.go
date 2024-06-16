@@ -14,6 +14,7 @@ type ServiceContainer struct {
 	Sessions *SessionsManager
 	Bot      *Bot
 	Name     string
+	Handlers *HandlersManager
 }
 
 func (c *ServiceContainer) Stop() {

@@ -31,7 +31,7 @@ func (b *builtService) Init(container *core.ServiceContainer) error {
 	}
 
 	for _, handler := range b.handlers {
-		container.Bot.AddHandler(handler)
+		container.Handlers.AddHandler(handler)
 	}
 
 	return nil
@@ -58,14 +58,13 @@ func BuildService(content any) *ServiceBuilder {
 
 func (b *ServiceBuilder) AddHandler(handler any) *ServiceBuilder {
 	b.service.handlers = append(b.service.handlers, handler)
-
 	return b
 }
 
 type CommandAction func(send *discordgo.MessageCreate)
 
 func (b *ServiceBuilder) AddCommand(name string, action CommandAction) *ServiceBuilder {
-	return b.AddHandler(func(session *discordgo.Session, send *discordgo.MessageCreate) {
+	return b.AddHandler(func(send *discordgo.MessageCreate) {
 		parts := strings.SplitN(send.Content, " ", 2)
 		if !send.Author.Bot && parts[0] == name {
 			action(send)
