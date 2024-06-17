@@ -76,7 +76,7 @@ func getImages(count int, tags []string) ([]string, error) {
 
 func (r *R34Service) checkTimer(send *discordgo.MessageCreate) bool {
 	session, _ := r.Sessions.GetSession(send.Author.ID)
-	if session != nil && time.Now().Sub(session.Data.(time.Time)) < time.Second*10 {
+	if session != nil && time.Now().Sub(session.Data.(time.Time)) < time.Second*1 {
 		r.replyFile(send, "assets/toofast.txt")
 		return true
 	}
@@ -190,7 +190,7 @@ func (r *R34Service) commandTo(send *discordgo.MessageCreate) {
 		tags = parts[3:]
 	}
 
-	if count > 15 {
+	if count > 100 {
 		r.replyFile(send, "assets/cowboy.txt")
 		return
 	}
