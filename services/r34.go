@@ -120,7 +120,7 @@ func (r *R34Service) command(send *discordgo.MessageCreate) {
 		tags = parts[2:]
 	}
 
-	if count > 15 {
+	if count > 100 {
 		r.replyFile(send, "assets/cowboy.txt")
 		return
 	}
