@@ -45,6 +45,8 @@ func counterCheck(achievement string, requiredCount int) func(userId string) {
 }
 
 var (
+	OnR34    = counterCheck("r34fan", 40)
+	OnR34To  = counterCheck("r34friend", 10)
 	OnBlock  = counterCheck("writer", 10)
 	OnReview = counterCheck("snitch", 10)
 )
