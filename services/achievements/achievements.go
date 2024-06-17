@@ -13,7 +13,12 @@ type progress struct {
 func (c *content) aristocratCheck(_ *discordgo.Session, send *discordgo.MessageCreate) {
 	info := c.getUserInfo(send.Author.ID)
 
-	if info.Progress.AristocratCount == 10 || !unicode.IsUpper(rune(send.Content[0])) || send.Content[len(send.Content)-1] != '.' {
+	if info.Progress.AristocratCount >= 10 {
+		c.giveAchievement(send.Author.ID, "aristocrat")
+		return
+	}
+
+	if !unicode.IsUpper(rune(send.Content[0])) || send.Content[len(send.Content)-1] != '.' {
 		return
 	}
 
@@ -32,7 +37,8 @@ func counterCheck(achievement string, requiredCount int) func(userId string) {
 	return func(userId string) {
 		info := c.getUserInfo(userId)
 
-		if info.Progress.Counters[achievement] == requiredCount {
+		if info.Progress.Counters[achievement] >= requiredCount {
+			c.giveAchievement(userId, achievement)
 			return
 		}
 
