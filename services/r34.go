@@ -234,6 +234,6 @@ func BuildR34Service() core.Service {
 	c := new(R34Service)
 	return builder.BuildService(c).
 		AddCommand("!r34", c.command).
-		AddCommand("!r34to", c.commandTo).
+		//AddCommand("!r34to", c.commandTo).
 		Finish()
 }
