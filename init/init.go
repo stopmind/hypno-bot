@@ -4,6 +4,7 @@ import (
 	"hypno-bot/core"
 	"hypno-bot/services"
 	"hypno-bot/services/achievements"
+	"hypno-bot/services/conpan"
 	"hypno-bot/services/judgment"
 	"hypno-bot/services/news"
 	"hypno-bot/utils"
@@ -17,8 +18,18 @@ func addService(bot *core.Bot, logger *log.Logger, name string, service core.Ser
 	}
 }
 
+func addCriticalService(bot *core.Bot, logger *log.Logger, name string, service core.Service) {
+	err := bot.AddService(name, service)
+	if err != nil {
+		_ = bot.Close()
+		logger.Panic(err)
+	}
+}
+
 func Init(bot *core.Bot, logger *log.Logger) {
-	addService(bot, logger, "serv.utils", utils.InitUtilsService())
+	addCriticalService(bot, logger, "serv.utils", utils.InitUtilsService())
+	addCriticalService(bot, logger, "serv.conpan", conpan.BuildService())
+
 	addService(bot, logger, "fun.spectacle", services.BuildSpectacleService())
 	addService(bot, logger, "fun.games", new(services.GamesService))
 	addService(bot, logger, "serv.rank", new(services.RankService))

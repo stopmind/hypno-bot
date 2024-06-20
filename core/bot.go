@@ -9,7 +9,7 @@ import (
 type Bot struct {
 	*discordgo.Session
 
-	services map[string]*ServiceContainer
+	Services map[string]*ServiceContainer
 }
 
 func (b *Bot) Start() error {
@@ -28,7 +28,8 @@ func (b *Bot) Start() error {
 		discordgo.IntentsGuildMembers |
 		discordgo.IntentsGuildMessageReactions |
 		discordgo.IntentGuildMessageReactions |
-		discordgo.IntentGuildPresences
+		discordgo.IntentGuildPresences |
+		discordgo.IntentDirectMessages
 
 	err = b.Open()
 	if err != nil {
@@ -38,7 +39,7 @@ func (b *Bot) Start() error {
 	return nil
 }
 func (b *Bot) AddService(name string, service Service) error {
-	_, ok := b.services[name]
+	_, ok := b.Services[name]
 
 	if ok {
 		return fmt.Errorf("bot: service with name \"%s\" already exist", name)
@@ -66,19 +67,19 @@ func (b *Bot) AddService(name string, service Service) error {
 		return fmt.Errorf("bot: service init: %s", err.Error())
 	}
 
-	b.services[name] = container
+	b.Services[name] = container
 
 	return nil
 }
 
 func (b *Bot) Update() {
-	for _, service := range b.services {
+	for _, service := range b.Services {
 		service.Sessions.Update()
 	}
 }
 
 func (b *Bot) Stop() {
-	for _, c := range b.services {
+	for _, c := range b.Services {
 		c.Stop()
 	}
 	_ = b.Close()
@@ -87,7 +88,7 @@ func (b *Bot) Stop() {
 func NewBot() *Bot {
 	result := new(Bot)
 
-	result.services = make(map[string]*ServiceContainer)
+	result.Services = make(map[string]*ServiceContainer)
 
 	return result
 }
