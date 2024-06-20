@@ -22,6 +22,12 @@ func (c *content) execute(session *shellSession, send *discordgo.MessageCreate, 
 	case "request-code":
 		c.requestCode(session, send)
 		break
+	case "restart":
+		c.restart(session, send)
+		break
+	case "update":
+		c.update(session, send)
+		break
 	}
 }
 
@@ -66,6 +72,11 @@ func (c *content) update(session *shellSession, send *discordgo.MessageCreate) {
 		}
 		return
 	}
+
+	err := exec.Command("sh", "-c", "cd.. && ./bot update && ./bot restart").Run()
+	if err != nil {
+		c.Logger.Print(err)
+	}
 }
 
 func (c *content) restart(session *shellSession, send *discordgo.MessageCreate) {
@@ -77,7 +88,10 @@ func (c *content) restart(session *shellSession, send *discordgo.MessageCreate) 
 		return
 	}
 
-	_ = exec.Command("sh", "-c", "../bot restart").Run()
+	err := exec.Command("sh", "-c", "cd.. && ./bot restart").Run()
+	if err != nil {
+		c.Logger.Print(err)
+	}
 }
 
 func (c *content) read(session *shellSession, send *discordgo.MessageCreate, path string) {
