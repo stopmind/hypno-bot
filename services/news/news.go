@@ -83,6 +83,8 @@ func (s *Service) Init(container *core.ServiceContainer) error {
 			s.publish(send)
 		case "одобрить":
 			s.accept(send)
+		case "архив":
+			s.archive(send)
 		default:
 			utils.ReplyError(send, ":stop_sign: Некоректная команда", fmt.Sprintf("Неизвестная команда: `%v`\nПопробуйте `?газета справка`", args.Get(0)))
 		}
@@ -93,6 +95,47 @@ func (s *Service) Init(container *core.ServiceContainer) error {
 
 func (s *Service) Stop() {
 	if err := s.Storage.WriteJson("state.json", &s.state); err != nil {
+		s.Logger.Print(err)
+	}
+}
+
+func (s *Service) archive(send *discordgo.MessageCreate) {
+	args, err := utils.NewArgsParser().
+		AddString().
+		AddString().
+		Parse(2, send.Content)
+
+	if err != nil {
+		utils.ReplyIncorrectArgsError(send, err)
+		return
+	}
+
+	releaseId := args.Get(1)
+
+	var release release
+	err = s.Storage.ReadJson(fmt.Sprintf("archive/%s.json", releaseId), &release)
+	if err != nil {
+		utils.ReplyError(send, ":stop_sign: Неизвестный выпуск", "Не получилось найти данный выпуск")
+	}
+
+	message := fmt.Sprintf("**Дата:** %s\n**Слоган:** %s\n**Описание:**\n```%s```\n**Блоки:**", release.Date, release.Tagline, release.Summary)
+
+	for i, block := range release.Blocks {
+		checkerName := "незвестный"
+		if checkerMember, err := s.Bot.GuildMember(send.GuildID, block.Checker); err == nil {
+			checkerName = core.MemberName(checkerMember)
+		}
+
+		authorName := "незвестный"
+		if authorMember, err := s.Bot.GuildMember(send.GuildID, block.Author); err == nil {
+			authorName = core.MemberName(authorMember)
+		}
+
+		message = fmt.Sprintf("%s\n%d. **%s**\n> *от* **%s**\n> *одобрено* **%s**", message, i+1, block.Title, authorName, checkerName)
+	}
+
+	err = s.Reply(send, message)
+	if err != nil {
 		s.Logger.Print(err)
 	}
 }
