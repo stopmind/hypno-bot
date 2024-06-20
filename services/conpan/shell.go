@@ -73,7 +73,7 @@ func (c *content) update(session *shellSession, send *discordgo.MessageCreate) {
 		return
 	}
 
-	err := exec.Command("sh", "-c", "cd.. && ./bot update && ./bot restart").Run()
+	err := exec.Command("sh", "-c", "cd .. && ./bot update && ./bot restart").Run()
 	if err != nil {
 		c.Logger.Print(err)
 	}
@@ -88,7 +88,7 @@ func (c *content) restart(session *shellSession, send *discordgo.MessageCreate) 
 		return
 	}
 
-	err := exec.Command("sh", "-c", "cd.. && ./bot restart").Run()
+	err := exec.Command("sh", "-c", "cd .. && ./bot restart").Run()
 	if err != nil {
 		c.Logger.Print(err)
 	}
