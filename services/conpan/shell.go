@@ -28,6 +28,12 @@ func (c *content) execute(session *shellSession, send *discordgo.MessageCreate, 
 	case "update":
 		c.update(session, send)
 		break
+	case "read":
+		c.read(session, send, args[1])
+		break
+	case "log":
+		c.log(session, send, args[1])
+		break
 	}
 }
 
@@ -104,7 +110,7 @@ func (c *content) read(session *shellSession, send *discordgo.MessageCreate, pat
 	}
 
 	data, err := os.ReadFile(fmt.Sprintf("storage/%s", path))
-	message := string(data)
+	message := fmt.Sprintf("```%s\n```", string(data))
 	if err != nil {
 		message = "Failed to read file"
 	}
@@ -124,8 +130,8 @@ func (c *content) log(session *shellSession, send *discordgo.MessageCreate, logN
 		return
 	}
 
-	data, err := os.ReadFile(fmt.Sprintf("log/%s", logName))
-	message := string(data)
+	data, err := os.ReadFile(fmt.Sprintf("log/%s.log", logName))
+	message := fmt.Sprintf("```%s\n```", string(data))
 	if err != nil {
 		message = "Failed to read log file"
 	}
