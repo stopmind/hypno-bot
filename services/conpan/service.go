@@ -12,10 +12,12 @@ import (
 type content struct {
 	builder.WithContainer
 	builder.WithState[struct {
-		Codes []string `json:"codes"`
+		Codes          []string `json:"codes"`
+		UpdatesBlocked bool     `json:"updates_blocked"`
 	}]
 	builder.WithConfig[struct {
-		Admins []string `toml:"admins"`
+		Admins             []string `toml:"admins"`
+		UpdatesControllers []string `toml:"updates_controllers"`
 	}]
 }
 
@@ -44,7 +46,37 @@ func (c *content) command(send *discordgo.MessageCreate) {
 
 func BuildService() core.Service {
 	c := new(content)
+
+	checkIsController := func(send *discordgo.MessageCreate) bool {
+		if !slices.Contains(c.Config.UpdatesControllers, send.Author.ID) {
+			err := c.Reply(send, "You are not a updates controller")
+			if err != nil {
+				c.Logger.Print(err)
+			}
+		}
+
+		return slices.Contains(c.Config.UpdatesControllers, send.Author.ID)
+	}
+
 	return builder.BuildService(c).
 		AddCommand("!conpan", c.command).
+		AddCommand("!block-updates", func(send *discordgo.MessageCreate) {
+			if checkIsController(send) {
+				c.State.UpdatesBlocked = true
+				err := c.Reply(send, "Updates blocked")
+				if err != nil {
+					c.Logger.Print(err)
+				}
+			}
+		}).
+		AddCommand("!accept-updates", func(send *discordgo.MessageCreate) {
+			if checkIsController(send) {
+				c.State.UpdatesBlocked = false
+				err := c.Reply(send, "Updates accepted")
+				if err != nil {
+					c.Logger.Print(err)
+				}
+			}
+		}).
 		Finish()
 }
