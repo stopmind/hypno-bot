@@ -28,8 +28,7 @@ func (b *Bot) Start() error {
 		discordgo.IntentsGuildMembers |
 		discordgo.IntentsGuildMessageReactions |
 		discordgo.IntentGuildMessageReactions |
-		discordgo.IntentGuildPresences |
-		discordgo.IntentDirectMessages
+		discordgo.IntentGuildPresences
 
 	err = b.Open()
 	if err != nil {
