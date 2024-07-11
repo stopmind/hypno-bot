@@ -109,9 +109,6 @@ func BuildService() core.Service {
 	c = new(content)
 	return builder.BuildService(c).
 		AddCommand("?ачивки", c.profile).
-		AddCommand("test", func(send *discordgo.MessageCreate) {
-			c.giveAchievement(send.Author.ID, "test")
-		}).
 		AddHandler(c.aristocratCheck).
 		Finish()
 }

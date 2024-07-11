@@ -116,6 +116,7 @@ func (s *Service) archive(send *discordgo.MessageCreate) {
 	err = s.Storage.ReadJson(fmt.Sprintf("archive/%s.json", releaseId), &release)
 	if err != nil {
 		utils.ReplyError(send, ":stop_sign: Неизвестный выпуск", "Не получилось найти данный выпуск")
+		return
 	}
 
 	message := fmt.Sprintf("**Дата:** %s\n**Слоган:** %s\n**Описание:**\n```%s```\n**Блоки:**", release.Date, release.Tagline, release.Summary)
