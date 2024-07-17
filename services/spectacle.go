@@ -53,9 +53,56 @@ func (s *Spectacle) command(send *discordgo.MessageCreate) {
 	}()
 }
 
+func (s *Spectacle) slashCommand(interaction *discordgo.InteractionCreate) {
+	scenario := s.Config.Scenarios[s.Config.Default]
+
+	go func() {
+		first := scenario[0]
+
+		err := s.Bot.InteractionRespond(interaction.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: first.Content,
+			},
+		})
+
+		if err != nil {
+			s.Logger.Print(err)
+			return
+		}
+
+		message, err := s.Bot.InteractionResponse(interaction.Interaction)
+
+		if err != nil {
+			s.Logger.Print(err)
+			return
+		}
+
+		time.Sleep(time.Duration(first.Time * float32(time.Second)))
+
+		for i := 1; i < len(scenario); i++ {
+			block := scenario[i]
+			_, err = s.Bot.ChannelMessageEdit(message.ChannelID, message.ID, block.Content)
+			if err != nil {
+				s.Logger.Print(err)
+				return
+			}
+
+			time.Sleep(time.Duration(block.Time * float32(time.Second)))
+		}
+
+		_, err = s.Bot.ChannelMessageEdit(message.ChannelID, message.ID, s.Config.End)
+		if err != nil {
+			s.Logger.Print(err)
+			return
+		}
+	}()
+}
+
 func BuildSpectacleService() core.Service {
 	content := new(Spectacle)
 	return builder.BuildService(content).
 		AddCommand("!spectacle", content.command).
+		AddSlashCommand("spectacle", "spectacle", content.slashCommand).
 		Finish()
 }

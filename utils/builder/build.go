@@ -6,10 +6,16 @@ import (
 	"strings"
 )
 
+type slashCommandInfo struct {
+	handler core.SlashCommandHandler
+	command *discordgo.ApplicationCommand
+}
+
 type builtService struct {
-	container *core.ServiceContainer
-	content   any
-	handlers  []any
+	container     *core.ServiceContainer
+	content       any
+	handlers      []any
+	slashCommands []slashCommandInfo
 }
 
 func (b *builtService) Init(container *core.ServiceContainer) error {
@@ -34,6 +40,13 @@ func (b *builtService) Init(container *core.ServiceContainer) error {
 		container.Handlers.AddHandler(handler)
 	}
 
+	for _, slashCommand := range b.slashCommands {
+		err := b.container.Slash.AddCommand(slashCommand.command, slashCommand.handler)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -51,8 +64,9 @@ type ServiceBuilder struct {
 
 func BuildService(content any) *ServiceBuilder {
 	return &ServiceBuilder{&builtService{
-		content:  content,
-		handlers: make([]any, 0),
+		content:       content,
+		handlers:      make([]any, 0),
+		slashCommands: make([]slashCommandInfo, 0),
 	}}
 }
 
@@ -70,6 +84,18 @@ func (b *ServiceBuilder) AddCommand(name string, action CommandAction) *ServiceB
 			action(send)
 		}
 	})
+}
+
+func (b *ServiceBuilder) AddSlashCommand(name string, description string, handler core.SlashCommandHandler) *ServiceBuilder {
+	b.service.slashCommands = append(b.service.slashCommands, slashCommandInfo{
+		handler: handler,
+		command: &discordgo.ApplicationCommand{
+			Name:        name,
+			Description: description,
+		},
+	})
+
+	return b
 }
 
 func (b *ServiceBuilder) Finish() core.Service {

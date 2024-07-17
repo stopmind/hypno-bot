@@ -15,6 +15,7 @@ type ServiceContainer struct {
 	Bot      *Bot
 	Name     string
 	Handlers *HandlersManager
+	Slash    *SlashCommandsManager
 }
 
 func (c *ServiceContainer) Stop() {

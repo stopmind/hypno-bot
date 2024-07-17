@@ -56,6 +56,7 @@ func (b *Bot) AddService(name string, service Service) error {
 	container.Logger, err = NewLogger(name)
 
 	container.Handlers = newHandlersManager(container.Logger, b)
+	container.Slash = newSlashCommandsManager(b, container.Handlers, container.Logger)
 
 	if err != nil {
 		return fmt.Errorf("bot: %s", err.Error())
@@ -81,6 +82,23 @@ func (b *Bot) Stop() {
 	for _, c := range b.Services {
 		c.Stop()
 	}
+
+	commands, err := b.ApplicationCommands(b.State.User.ID, "")
+
+	if err != nil {
+		print(err.Error())
+	} else {
+		for _, c := range commands {
+			if err = b.ApplicationCommandDelete(c.ApplicationID, c.GuildID, c.ID); err != nil {
+				print(err.Error())
+			}
+		}
+	}
+
+	if err != nil {
+		print(err.Error())
+	}
+
 	_ = b.Close()
 }
 
