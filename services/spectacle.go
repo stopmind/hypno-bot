@@ -104,5 +104,6 @@ func BuildSpectacleService() core.Service {
 	return builder.BuildService(content).
 		AddCommand("!spectacle", content.command).
 		AddSlashCommand("spectacle", "spectacle", content.slashCommand).
+		EndCommand().
 		Finish()
 }

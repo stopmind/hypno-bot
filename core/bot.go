@@ -28,7 +28,8 @@ func (b *Bot) Start() error {
 		discordgo.IntentsGuildMembers |
 		discordgo.IntentsGuildMessageReactions |
 		discordgo.IntentGuildMessageReactions |
-		discordgo.IntentGuildPresences
+		discordgo.IntentGuildPresences |
+		discordgo.IntentDirectMessages
 
 	err = b.Open()
 	if err != nil {
@@ -56,7 +57,7 @@ func (b *Bot) AddService(name string, service Service) error {
 	container.Logger, err = NewLogger(name)
 
 	container.Handlers = newHandlersManager(container.Logger, b)
-	container.Slash = newSlashCommandsManager(b, container.Handlers, container.Logger)
+	container.Interactions = newSlashCommandsManager(b, container.Handlers, container.Logger)
 
 	if err != nil {
 		return fmt.Errorf("bot: %s", err.Error())

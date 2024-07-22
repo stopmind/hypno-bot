@@ -7,15 +7,16 @@ import (
 )
 
 type slashCommandInfo struct {
-	handler core.SlashCommandHandler
+	handler core.InteractionCreateHandler
 	command *discordgo.ApplicationCommand
 }
 
 type builtService struct {
-	container     *core.ServiceContainer
-	content       any
-	handlers      []any
-	slashCommands []slashCommandInfo
+	container          *core.ServiceContainer
+	content            any
+	handlers           []any
+	slashCommands      []slashCommandInfo
+	componentsHandlers []core.InteractionCreateHandler
 }
 
 func (b *builtService) Init(container *core.ServiceContainer) error {
@@ -41,10 +42,14 @@ func (b *builtService) Init(container *core.ServiceContainer) error {
 	}
 
 	for _, slashCommand := range b.slashCommands {
-		err := b.container.Slash.AddCommand(slashCommand.command, slashCommand.handler)
+		err := b.container.Interactions.AddCommand(slashCommand.command, slashCommand.handler)
 		if err != nil {
 			return err
 		}
+	}
+
+	for _, handler := range b.componentsHandlers {
+		b.container.Interactions.AddComponentHandler(handler)
 	}
 
 	return nil
@@ -86,15 +91,19 @@ func (b *ServiceBuilder) AddCommand(name string, action CommandAction) *ServiceB
 	})
 }
 
-func (b *ServiceBuilder) AddSlashCommand(name string, description string, handler core.SlashCommandHandler) *ServiceBuilder {
+func (b *ServiceBuilder) AddSlashCommand(name string, description string, handler core.InteractionCreateHandler) *SlashCommandBuilder {
+	builder, command := buildSlashCommand(b, name, description)
+
 	b.service.slashCommands = append(b.service.slashCommands, slashCommandInfo{
 		handler: handler,
-		command: &discordgo.ApplicationCommand{
-			Name:        name,
-			Description: description,
-		},
+		command: command,
 	})
 
+	return builder
+}
+
+func (b *ServiceBuilder) AddComponentHandler(handler core.InteractionCreateHandler) *ServiceBuilder {
+	b.service.componentsHandlers = append(b.service.componentsHandlers, handler)
 	return b
 }
 

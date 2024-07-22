@@ -8,14 +8,14 @@ type Service interface {
 }
 
 type ServiceContainer struct {
-	Service  Service
-	Storage  *Storage
-	Logger   *log.Logger
-	Sessions *SessionsManager
-	Bot      *Bot
-	Name     string
-	Handlers *HandlersManager
-	Slash    *SlashCommandsManager
+	Service      Service
+	Storage      *Storage
+	Logger       *log.Logger
+	Sessions     *SessionsManager
+	Bot          *Bot
+	Name         string
+	Handlers     *HandlersManager
+	Interactions *InteractionsManager
 }
 
 func (c *ServiceContainer) Stop() {
